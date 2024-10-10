@@ -7,6 +7,9 @@
 which gulp > /dev/null
 GULP_INSTALLED=$?
 
+# Some things are part of dev dependencies (js-yaml, uglify, etc.)
+PATH="./node_modules/.bin:$PATH"
+
 which gifsicle > /dev/null
 GIFSICLE_INSTALLED=$?
 
@@ -35,6 +38,9 @@ UGLIFYCSS_INSTALLED=$?
 
 which uglifyjs > /dev/null
 UGLIFYJS_INSTALLED=$?
+
+which magick > /dev/null
+IMAGEMAGICKV7_INSTALLED=$?
 
 which convert > /dev/null
 IMAGEMAGICK_INSTALLED=$?
@@ -222,7 +228,11 @@ function render-still () {
     find "$src" -name '*.gif' -print0 |
       while IFS= read -r -d '' f; do
         bn="$(basename "$f")"
-        convert -coalesce "${f}[0]" "still/$src/${bn/.gif/.png}"
+        if [ $IMAGEMAGICKV7_INSTALLED -eq 0 ]; then
+          magick "${f}[0]" -coalesce "still/$src/${bn/.gif/.png}"
+        else
+          convert -coalesce "${f}[0]" "still/$src/${bn/.gif/.png}"
+        fi
       done
   done
 }
@@ -264,6 +274,9 @@ function main () {
       cp guests.yaml dist/
       cp flags.yaml dist/
       render-json
+      ;;
+    "verify-install")
+      echo "All dependencies are installed!"
       ;;
     *)
       echo "usage: $0 <test|clean|readme|build>"
